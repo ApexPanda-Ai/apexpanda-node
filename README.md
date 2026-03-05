@@ -49,7 +49,3 @@ pnpm run package:win
 ## 关于
 
 节点是 ApexPanda 体系中的执行端，负责在本地执行 AI 下发的任务。Gateway 负责调度，节点负责在真实环境中完成 system.run、剪贴板读写、OCR、录屏等操作。
-
-## 首次推送到 GitHub
-
-见 [GITHUB_SETUP.md](GITHUB_SETUP.md)
