@@ -1,0 +1,69 @@
+{
+  "name": "@apexpanda/node-desktop",
+  "version": "1.1.0",
+  "description": "ApexPanda 桌面节点 - Electron 客户端，支持摄像头、录屏、Canvas",
+  "main": "dist/main.js",
+  "type": "module",
+  "author": "ApexPanda",
+  "scripts": {
+    "build": "tsc && tsc -p tsconfig.preload.json",
+    "start": "electron .",
+    "dev": "pnpm run build && electron .",
+    "package": "pnpm run build && electron-builder",
+    "package:win": "pnpm run build && electron-builder --win",
+    "package:mac": "pnpm run build && electron-builder --mac",
+    "package:linux": "pnpm run build && electron-builder --linux"
+  },
+  "dependencies": {
+    "tesseract.js": "^5.1.0",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.5.13",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "build": {
+    "appId": "ai.apexpanda.node-desktop",
+    "productName": "ApexPanda 桌面节点",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**",
+      "renderer/**",
+      "assets/**"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "installerLanguages": [
+        "zh_CN",
+        "en_US"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.developer-tools"
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ]
+    }
+  }
+}

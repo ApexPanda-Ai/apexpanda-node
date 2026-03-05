@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ApexPanda 节点</string>
+    <string name="gateway_url_hint">Gateway 地址，如 https://gateway.example.com:18790</string>
+    <string name="display_name_hint">节点显示名，如 我的手机</string>
+    <string name="connect">连接</string>
+    <string name="disconnect">断开</string>
+    <string name="status_connecting">连接中…</string>
+    <string name="status_pending">等待配对审批…</string>
+    <string name="status_connected">已连接</string>
+    <string name="status_disconnected">未连接</string>
+    <string name="accessibility_service_description">用于 UI 自动化：点击、输入、滑动等操作，供 Agent 控制手机界面</string>
+</resources>
+

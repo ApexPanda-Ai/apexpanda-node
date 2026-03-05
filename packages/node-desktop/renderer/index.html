@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'">
+  <title>ApexPanda 桌面节点</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+      margin: 0; padding: 0; background: linear-gradient(160deg, #0f172a 0%, #1e293b 100%);
+      color: #f1f5f9; min-height: 100vh; overflow: hidden;
+    }
+    .card {
+      background: rgba(30, 41, 59, 0.8); border-radius: 16px; padding: 24px;
+      border: 1px solid rgba(71, 85, 105, 0.5); box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+    }
+    h2 { margin: 0 0 20px; font-size: 22px; font-weight: 600; color: #f8fafc; }
+    label { display: block; font-size: 13px; color: #94a3b8; margin-bottom: 6px; font-weight: 500; }
+    input[type="text"] {
+      width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid #475569;
+      background: #0f172a; color: #e2e8f0; font-size: 14px; margin-bottom: 16px;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+    .row { display: flex; gap: 12px; margin-bottom: 16px; position: relative; z-index: 1; }
+    .row button { flex: 1; padding: 12px 18px; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; border: none; transition: all 0.2s; }
+    .btnConnect { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+    .btnConnect:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59,130,246,0.4); }
+    .btnDisconnect { background: transparent; color: #94a3b8; border: 1px solid #475569; }
+    .btnDisconnect:hover:not(:disabled) { background: #334155; color: #e2e8f0; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+    .status {
+      display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 12px;
+      background: rgba(15, 23, 42, 0.8); margin-bottom: 20px; border: 1px solid rgba(71, 85, 105, 0.4);
+    }
+    .statusDot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; transition: background 0.3s; background: #64748b; }
+    .statusDot.connected { background: #22c55e; box-shadow: 0 0 10px rgba(34,197,94,0.5); }
+    .statusDot.connecting { background: #f59e0b; animation: pulse 1.2s ease-in-out infinite; }
+    .statusDot.pending { background: #eab308; animation: pulse 1.2s ease-in-out infinite; }
+    .statusDot.failed { background: #ef4444; animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .statusText { font-size: 15px; font-weight: 600; }
+    .toggleRow { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-top: 1px solid rgba(51, 65, 85, 0.6); margin-top: 18px; }
+    .toggleLabel { font-size: 14px; color: #cbd5e1; }
+    .toggle { width: 48px; height: 26px; background: #475569; border-radius: 13px; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+    .toggle.on { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .toggle::after { content: ''; position: absolute; width: 22px; height: 22px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: left 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+    .toggle.on::after { left: 24px; }
+    .hint { font-size: 12px; color: #64748b; margin-top: 18px; line-height: 1.6; }
+    .hint code { background: rgba(15,23,42,0.8); padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+    .content { padding: 24px; }
+  </style>
+</head>
+<body>
+  <div class="content">
+  <div class="card">
+  <label>Gateway 地址</label>
+  <input type="text" id="gatewayUrl" placeholder="http://127.0.0.1:18790">
+  <label>显示名称</label>
+  <input type="text" id="displayName" placeholder="Desktop Node">
+  <div class="status">
+    <span class="statusDot" id="statusDot"></span>
+    <span class="statusText" id="statusText">未连接</span>
+  </div>
+  <div class="row">
+    <button class="btnConnect" id="btnConnect">连接</button>
+    <button class="btnDisconnect" id="btnDisconnect">断开</button>
+  </div>
+  <div class="toggleRow">
+    <span class="toggleLabel">开机自启动</span>
+    <div class="toggle" id="toggleStartup" title="开启后电脑重启时节点自动启动"></div>
+  </div>
+  <p class="hint">首次使用：输入 Gateway 地址，点击连接。管理员在 Dashboard 节点页审批通过后即可使用。断开后会自动重连。<br>若一直连接中或连接失败：请先在项目根目录运行 <code>pnpm run dev:gateway</code> 启动 Gateway 服务。</p>
+  </div>
+  </div>
+  <script src="index.js"></script>
+</body>
+</html>
