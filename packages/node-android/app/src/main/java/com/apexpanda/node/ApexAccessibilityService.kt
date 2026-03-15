@@ -5,8 +5,6 @@ import android.view.accessibility.AccessibilityEvent
 import android.accessibilityservice.GestureDescription
 import android.graphics.Path
 import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.view.accessibility.AccessibilityNodeInfo
 import android.util.Log
 import androidx.annotation.RequiresApi
@@ -39,6 +37,19 @@ class ApexPandaAccessibilityService : AccessibilityService() {
         val path = Path().apply { moveTo(x, y) }
         val stroke = GestureDescription.StrokeDescription(path, 0, 10)
         val gesture = GestureDescription.Builder().addStroke(stroke).build()
+        return dispatchGesture(gesture, null, null)
+    }
+
+    /** 双击 (x,y)：两次快速点击，间隔约 60ms */
+    @RequiresApi(Build.VERSION_CODES.N)
+    fun doubleTap(x: Float, y: Float): Boolean {
+        val path = Path().apply { moveTo(x, y) }
+        val stroke1 = GestureDescription.StrokeDescription(path, 0, 10)
+        val stroke2 = GestureDescription.StrokeDescription(path, 60, 70)
+        val gesture = GestureDescription.Builder()
+            .addStroke(stroke1)
+            .addStroke(stroke2)
+            .build()
         return dispatchGesture(gesture, null, null)
     }
 
@@ -105,6 +116,31 @@ class ApexPandaAccessibilityService : AccessibilityService() {
     fun tapByText(text: String): Boolean {
         val root = rootInActiveWindow ?: return false
         val node = findNodeByText(root, text) ?: return false
+        return tapNodeCenter(node)
+    }
+
+    /** 按 resourceId 查找节点并点击（id 可为完整如 com.xx:id/btn_ok 或短名 btn_ok）*/
+    fun tapByResourceId(id: String): Boolean {
+        val root = rootInActiveWindow ?: return false
+        val node = findNodeByResourceId(root, id) ?: return false
+        return tapNodeCenter(node)
+    }
+
+    /** 按 className 查找节点并点击（如 android.widget.Button 或 Button）*/
+    fun tapByClassName(className: String): Boolean {
+        val root = rootInActiveWindow ?: return false
+        val node = findNodeByClassName(root, className) ?: return false
+        return tapNodeCenter(node)
+    }
+
+    /** 按 contentDescription 查找节点并点击 */
+    fun tapByContentDesc(desc: String): Boolean {
+        val root = rootInActiveWindow ?: return false
+        val node = findNodeByContentDesc(root, desc) ?: return false
+        return tapNodeCenter(node)
+    }
+
+    private fun tapNodeCenter(node: AccessibilityNodeInfo): Boolean {
         val r = android.graphics.Rect()
         node.getBoundsInScreen(r)
         node.recycle()
@@ -135,6 +171,42 @@ class ApexPandaAccessibilityService : AccessibilityService() {
         for (i in 0 until node.childCount) {
             val child = node.getChild(i) ?: continue
             val found = findNodeByText(child, text)
+            child.recycle()
+            if (found != null) return found
+        }
+        return null
+    }
+
+    private fun findNodeByResourceId(node: AccessibilityNodeInfo, id: String): AccessibilityNodeInfo? {
+        val rid = node.viewIdResourceName ?: ""
+        if (rid.isNotEmpty() && (rid == id || rid.endsWith("/$id") || rid.endsWith(":$id"))) return AccessibilityNodeInfo.obtain(node)
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i) ?: continue
+            val found = findNodeByResourceId(child, id)
+            child.recycle()
+            if (found != null) return found
+        }
+        return null
+    }
+
+    private fun findNodeByClassName(node: AccessibilityNodeInfo, className: String): AccessibilityNodeInfo? {
+        val cn = node.className?.toString() ?: ""
+        if (cn.isNotEmpty() && (cn == className || cn.endsWith(".$className"))) return AccessibilityNodeInfo.obtain(node)
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i) ?: continue
+            val found = findNodeByClassName(child, className)
+            child.recycle()
+            if (found != null) return found
+        }
+        return null
+    }
+
+    private fun findNodeByContentDesc(node: AccessibilityNodeInfo, desc: String): AccessibilityNodeInfo? {
+        val d = node.contentDescription?.toString() ?: ""
+        if (d.contains(desc, ignoreCase = true)) return AccessibilityNodeInfo.obtain(node)
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i) ?: continue
+            val found = findNodeByContentDesc(child, desc)
             child.recycle()
             if (found != null) return found
         }

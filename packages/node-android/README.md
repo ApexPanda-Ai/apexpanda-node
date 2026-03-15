@@ -1,6 +1,10 @@
 # ApexPanda Android 节点
 
-Android 设备节点客户端，连接 Gateway 后暴露 **仅移动端支持** 的能力，与 Linux/Windows 节点的能力不同：
+Android 设备节点客户端，连接 Gateway 后暴露移动端专属能力。与 Headless / 桌面节点能力互补，Agent 会根据在线节点能力自动筛选可用工具。
+
+## 能力概览
+
+### 基础能力（与桌面节点对比）
 
 | 能力 | 说明 | 对比 |
 |------|------|------|
@@ -9,16 +13,49 @@ Android 设备节点客户端，连接 Gateway 后暴露 **仅移动端支持** 
 | `screen.record` | 手机屏幕录制（需先授权） | 桌面可录电脑屏幕 |
 | `location.get` | 手机 GPS 定位 | **仅 Android 支持**，桌面无此能力 |
 
-Android 节点 **不支持** `system.run`、`system.readFile` 等电脑端能力；Agent 会根据在线节点能力自动筛选可用工具。
+Android 节点 **不支持** `system.run`、`system.readFile` 等电脑端能力。
+
+### UI 自动化能力（无障碍 + OCR + 图像匹配）
+
+开启 **设置 → 无障碍 → ApexPanda 节点** 后支持：
+
+| 能力 | 说明 |
+|------|------|
+| `ui.tap` | 点击：支持 `text`、`x,y`、`id`、`className`、`contentDesc` 等选择器 |
+| `ui.tapByImage` | 按图片模板匹配并点击（图标、非文字按钮） |
+| `ui.doubleTap` | 双击：按坐标或文字 |
+| `ui.longPress` | 长按 |
+| `ui.input` | 输入文字 |
+| `ui.swipe` | 滑动 |
+| `ui.back` / `ui.home` | 返回键 / 主页键 |
+| `ui.launch` | 启动应用：支持 `app`（如「微信」「美团」）或 `package`（如 `com.tencent.mm`） |
+| `ui.listApps` | 返回支持的应用名列表，便于 Agent 选择 |
+| `ui.wait` | 固定时长等待（秒） |
+| `ui.waitFor` | 等待某文字出现 |
+| `ui.dump` | 导出无障碍树 |
+| `ui.analyze` | 合并 accessibility + OCR 一次输出 |
+| `ui.flow` | 结构化微脚本：`waitFor` + `then`、条件分支、超时、重试 |
+| `ui.takeOver` | 人工接管：登录、验证码等场景暂停，用户完成后再继续 |
+
+**OCR**：`screen.ocr` 截屏 + ML Kit 文字识别（中文），返回文字及坐标。`ui.tap(text)` 在无障碍未找到时会自动用 OCR 兜底。
+
+### 增强能力说明
+
+- **应用名映射**：内置 100+ 中英文应用名 → 包名映射，Agent 可直接传「微信」「Chrome」等，无需记忆包名。
+- **选择器增强**：除 `text` 外，支持 `resourceId`、`className`、`contentDesc`，适配无文字控件。
+- **图像匹配**：`ui.tapByImage` 适合图标、点赞、收藏等非文字按钮。
+- **微脚本**：`ui.flow` 用 JSON 描述流程，支持 `waitFor`（text/image/selector）+ `then`，无需执行任意 JS。
+
+详见项目内增强方案文档：
+- [`docs/ANDROID_NODE_ENHANCEMENT_PLAN.md`](../../docs/ANDROID_NODE_ENHANCEMENT_PLAN.md) — 应用名、双击、等待、人工接管等
+- [`docs/ANDROID_AUTOMATION_ENHANCEMENT_PLAN.md`](../../docs/ANDROID_AUTOMATION_ENHANCEMENT_PLAN.md) — 图像匹配、选择器、微脚本
 
 ## 使用
 
 1. 用 Android Studio 打开 `packages/node-android`
 2. 配置 Gateway 地址（如 `https://your-gateway:18790`）
 3. 点击「连接」→ 首次需在 Dashboard 节点页审批配对
-4. 审批通过后节点上线，Agent 可通过 `node-invoke_cameraSnap`、`node-invoke_uiTap` 等工具调用
-5. **UI 自动化**：在 设置→无障碍→ApexPanda 节点 中开启辅助功能后，可使用 `ui.tap`、`ui.input`、`ui.swipe`、`ui.back`、`ui.home`、`ui.dump`、`ui.longPress`、`ui.launch` 等
-6. **OCR**：`screen.ocr` 截屏+ML Kit 文字识别（中文），返回文字及坐标，`ui.tap(text)` 在 accessibility 未找到时会自动用 OCR 兜底；`ui.analyze` 合并 accessibility+OCR 一次输出
+4. 审批通过后节点上线，Agent 可通过 `node-invoke_cameraSnap`、`node-invoke_uiTap`、`node-invoke_uiTapByImage` 等工具调用
 
 ## 权限
 

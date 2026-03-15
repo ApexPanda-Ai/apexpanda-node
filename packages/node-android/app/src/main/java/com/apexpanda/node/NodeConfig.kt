@@ -12,6 +12,7 @@ object NodeConfig {
     private const val KEY_DEVICE_ID = "device_id"
     private const val KEY_TOKEN = "token"
     private const val NODE_JSON = "node.json"
+    private const val VOICEWAKE_JSON = "voicewake.json"
 
     private fun prefs(ctx: Context): SharedPreferences =
         ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -62,5 +63,12 @@ object NodeConfig {
         } catch (_: Exception) {
             null
         }
+    }
+
+    /** 保存 voicewake 配置（从 Gateway 下发的 voicewake_config） */
+    fun saveVoiceWakeConfig(ctx: Context, config: JSONObject) {
+        try {
+            File(ctx.filesDir, VOICEWAKE_JSON).writeText(config.toString(2))
+        } catch (_: Exception) { }
     }
 }

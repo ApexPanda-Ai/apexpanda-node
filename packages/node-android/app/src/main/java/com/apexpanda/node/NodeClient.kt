@@ -26,7 +26,8 @@ class NodeClient(
     private val token: String?,
     private val onStatus: (Status) -> Unit,
     private val onCommand: suspend (String, String, Map<String, Any?>) -> Map<String, Any?>,
-    private val onPaired: ((String) -> Unit)? = null
+    private val onPaired: ((String) -> Unit)? = null,
+    private val onVoiceWakeConfig: ((JSONObject) -> Unit)? = null
 ) {
     enum class Status {
         CONNECTING,
@@ -97,8 +98,10 @@ class NodeClient(
                         "camera.snap", "camera.clip", "screen.record",
                         "location.get",
                         "ui.tap", "ui.input", "ui.swipe", "ui.back", "ui.home", "ui.dump",
-                        "ui.longPress", "ui.launch", "ui.scroll", "ui.waitFor", "ui.sequence",
-                        "screen.ocr", "ui.analyze"
+                        "ui.longPress", "ui.launch", "ui.scroll", "ui.waitFor", "ui.wait",
+                        "ui.doubleTap", "ui.takeOver", "ui.listApps", "ui.tapByImage", "ui.sequence", "ui.flow",
+                        "screen.ocr", "screen.findImage", "ui.analyze",
+                        "audio.record", "audio.playback"
                     )))
                     token?.let { put("token", it) }
                 }
@@ -124,14 +127,21 @@ class NodeClient(
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 Log.e(TAG, "WebSocket failure", t)
-                onStatus(Status.DISCONNECTED)
-                if (!userDisconnected) scheduleReconnect()
+                if (webSocket === ws) {
+                    ws = null
+                    nodeId = null
+                    onStatus(Status.DISCONNECTED)
+                    if (!userDisconnected) scheduleReconnect()
+                }
             }
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
-                nodeId = null
-                onStatus(Status.DISCONNECTED)
-                if (!userDisconnected) scheduleReconnect()
+                if (webSocket === ws) {
+                    ws = null
+                    nodeId = null
+                    onStatus(Status.DISCONNECTED)
+                    if (!userDisconnected) scheduleReconnect()
+                }
             }
         })
     }
@@ -146,6 +156,10 @@ class NodeClient(
                     put("type", "pong")
                     put("ts", System.currentTimeMillis())
                 }.toString())
+            }
+            "voicewake_config" -> {
+                val payload = frame.optJSONObject("payload") ?: frame
+                if (payload.length() > 0) onVoiceWakeConfig?.invoke(payload)
             }
             "connect_result" -> {
                 val ok = frame.optBoolean("ok", false)
@@ -174,6 +188,28 @@ class NodeClient(
                     onPaired?.invoke(tok)
                     onStatus(Status.CONNECTED)
                     Log.d(TAG, "Paired: nodeId=$nid")
+                    // 模仿桌面端：在当前连接上重发带 token 的 connect 帧，让 Gateway 立即注册上线
+                    val reconnectPayload = JSONObject().apply {
+                        put("role", "node")
+                        put("deviceId", deviceId)
+                        put("displayName", displayName)
+                        put("platform", "android")
+                        put("protocolVersion", "1")
+                        put("token", tok)
+                        put("capabilities", org.json.JSONArray(listOf(
+                            "camera.snap", "camera.clip", "screen.record",
+                            "location.get",
+                            "ui.tap", "ui.input", "ui.swipe", "ui.back", "ui.home", "ui.dump",
+                            "ui.longPress", "ui.launch", "ui.scroll", "ui.waitFor", "ui.wait",
+                            "ui.doubleTap", "ui.takeOver", "ui.listApps", "ui.tapByImage", "ui.sequence", "ui.flow",
+                            "screen.ocr", "screen.findImage", "ui.analyze",
+                            "audio.record", "audio.playback"
+                        )))
+                    }
+                    webSocket.send(JSONObject().apply {
+                        put("type", "connect")
+                        put("payload", reconnectPayload)
+                    }.toString())
                 }
             }
             "exec_approval_result" -> {
@@ -246,6 +282,20 @@ class NodeClient(
         ws = null
         nodeId = null
         onStatus(Status.DISCONNECTED)
+    }
+
+    /** 发送语音录音完成事件（供 AudioHandler 在录音结束后调用） */
+    fun sendVoiceAudioReady(base64: String, format: String) {
+        val nid = nodeId ?: return
+        if (base64.isBlank()) return
+        ws?.send(JSONObject().apply {
+            put("type", "voice_audio_ready")
+            put("payload", JSONObject().apply {
+                put("nodeId", nid)
+                put("base64", base64)
+                put("format", format)
+            })
+        }.toString())
     }
 
     companion object {

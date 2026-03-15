@@ -4,7 +4,7 @@ node_modules/
 # Node 编译产物
 dist/
 
-# Electron 桌面节点打包产物 (通过 GitHub Releases 发布 exe/dmg/AppImage)
+# Electron 桌面节点打包产物（通过 GitHub Releases 发布 exe/dmg/AppImage）
 packages/node-desktop/release/
 packages/node-desktop/dist/
 *.exe
@@ -12,12 +12,14 @@ packages/node-desktop/dist/
 *.AppImage
 *.blockmap
 
-# Android 构建产物 (通过 GitHub Releases 发布 apk)
+# Android 构建产物（通过 GitHub Releases 发布 apk）
 packages/node-android/.gradle/
 packages/node-android/build/
 packages/node-android/app/build/
 packages/node-android/local.properties
 packages/node-android/gradle-*-bin.zip
+packages/node-android/*.keystore
+packages/node-android/packages/
 *.apk
 *.aab
 
@@ -26,3 +28,5 @@ packages/node-android/gradle-*-bin.zip
 .env
 .DS_Store
 *.tsbuildinfo
+empty_temp/
+empty_temp/

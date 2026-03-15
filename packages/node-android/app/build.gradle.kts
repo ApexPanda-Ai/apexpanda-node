@@ -6,6 +6,15 @@ plugins {
 android {
     compileSdk = 33
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("../apexpanda-release.keystore")
+            storePassword = "apexpanda123"
+            keyAlias = "apexpanda"
+            keyPassword = "apexpanda123"
+        }
+    }
+
     defaultConfig {
         applicationId = "com.apexpanda.node"
         minSdk = 24
@@ -16,6 +25,7 @@ android {
 
     buildTypes {
         getByName("release") {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -49,4 +59,5 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.4.3")
     implementation("com.google.mlkit:text-recognition:16.0.1")
     implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
+    implementation("com.quickbirdstudios:opencv:4.5.3.0")
 }
